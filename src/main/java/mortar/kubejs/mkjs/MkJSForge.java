@@ -31,7 +31,7 @@ public class MkJSForge {
     }
 
     private void onServerCommon(FMLDedicatedServerSetupEvent event) {
-        new HttpKubeJS();
+        new MkJSPlugins();
     }
 
     private void onServerEnding(ServerStoppedEvent e) {
