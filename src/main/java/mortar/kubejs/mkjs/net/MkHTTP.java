@@ -1,4 +1,4 @@
-package mortar.kubejs.mkjs;
+package mortar.kubejs.mkjs.net;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -9,27 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import dev.latvian.mods.kubejs.KubeJSPlugin;
-import dev.latvian.mods.kubejs.script.BindingsEvent;
-
-public class MkJSPlugins extends KubeJSPlugin {
-    @Override
-    public void init() {
-        MkJSForge.LOGGER.info("Http Plugin初始化中...");
-    }
-
-    @Override
-    public void registerBindings(BindingsEvent event) {
-        event.add("HttpPlugin", new HttpPlugin());
-        event.add("WSPlugin", new WSPlugin());
-    }
-}
-
-class WSPlugin {
-    
-}
-
-class HttpPlugin {
+public class MkHTTP {
     /**
      * 执行GET请求
      * 

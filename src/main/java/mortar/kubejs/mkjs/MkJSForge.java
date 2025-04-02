@@ -31,7 +31,6 @@ public class MkJSForge {
     }
 
     private void onServerCommon(FMLDedicatedServerSetupEvent event) {
-        new MkJSPlugins();
     }
 
     private void onServerEnding(ServerStoppedEvent e) {

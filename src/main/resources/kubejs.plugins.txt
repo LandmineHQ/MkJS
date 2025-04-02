@@ -1,1 +1,1 @@
-mortar.kubejs.mkjs.MkJSPlugins
+mortar.kubejs.mkjs.plugins.MkJSPlugin
