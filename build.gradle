@@ -124,6 +124,13 @@ repositories {
     //     dir 'libs'
     // }
 
+    mavenCentral()
+
+    // 添加Jakarta EE专用仓库
+    maven {
+        url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+    }
+
     maven {
 		// Shedaniel's maven (Architectury API)
 		url = "https://maven.architectury.dev"
@@ -167,6 +174,12 @@ dependencies {
     implementation fg.deobf("dev.latvian.mods:kubejs-forge:${kubejs_version}")
     implementation fg.deobf("dev.latvian.mods:rhino-forge:${rhino_version}")
     implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
+
+    // Jakarta EE WebSocket API
+    implementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
+    // 实现库（如果需要）
+    implementation 'org.glassfish.tyrus:tyrus-server:2.1.0'
+    implementation 'org.glassfish.tyrus:tyrus-client:2.1.0'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

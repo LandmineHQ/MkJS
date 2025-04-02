@@ -1,20 +1,28 @@
 package mortar.kubejs.mkjs.net;
 
+import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import jakarta.websocket.ClientEndpoint;
+import jakarta.websocket.CloseReason;
+import jakarta.websocket.ContainerProvider;
+import jakarta.websocket.DeploymentException;
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnError;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
+import jakarta.websocket.WebSocketContainer;
+
 import mortar.kubejs.mkjs.MkJSForge;
 
 public class MkWebSocket {
     private Map<String, WebSocketClient> connections = new ConcurrentHashMap<>();
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     /**
      * 定义三参数消费者接口，用于onClose回调
@@ -105,14 +113,13 @@ public class MkWebSocket {
      * WebSocket客户端实现
      */
     private class WebSocketClient {
-        private WebSocket webSocket;
         private final String url;
         private final BiConsumer<String, String> onMessageCallback;
         private final Consumer<String> onOpenCallback;
         private final TriConsumer<String, Integer, String> onCloseCallback;
         private final BiConsumer<String, String> onErrorCallback;
         private boolean connected = false;
-        private CompletableFuture<WebSocket> futureWebSocket;
+        private Session session;
 
         public WebSocketClient(String url,
                 BiConsumer<String, String> onMessage,
@@ -127,107 +134,12 @@ public class MkWebSocket {
         }
 
         public void connect() throws Exception {
-            WebSocket.Listener listener = new WebSocket.Listener() {
-                StringBuilder messageBuilder = new StringBuilder();
-
-                @Override
-                public void onOpen(WebSocket webSocket) {
-                    connected = true;
-                    MkJSForge.LOGGER.info("WebSocket连接已建立: " + url);
-                    if (onOpenCallback != null) {
-                        try {
-                            // 直接调用回调函数
-                            onOpenCallback.accept(url);
-                        } catch (Exception e) {
-                            MkJSForge.LOGGER.error("执行onOpen回调失败: " + e.getMessage(), e);
-                        }
-                    }
-                    // 请求接收消息
-                    webSocket.request(1);
-                }
-
-                @Override
-                public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                    // 累积消息片段
-                    messageBuilder.append(data);
-
-                    // 如果这是最后一个片段，处理完整消息
-                    if (last) {
-                        String completeMessage = messageBuilder.toString();
-                        messageBuilder = new StringBuilder();
-
-                        if (onMessageCallback != null) {
-                            try {
-                                // 直接调用回调函数
-                                onMessageCallback.accept(completeMessage, url);
-                            } catch (Exception e) {
-                                MkJSForge.LOGGER.error("执行onMessage回调失败: " + e.getMessage(), e);
-                            }
-                        }
-                    }
-
-                    // 请求接收更多消息
-                    webSocket.request(1);
-                    return CompletableFuture.completedFuture(null);
-                }
-
-                @Override
-                public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                    connected = false;
-                    MkJSForge.LOGGER.info("WebSocket连接已关闭: " + url + ", 状态码: " + statusCode + ", 原因: " + reason);
-                    if (onCloseCallback != null) {
-                        try {
-                            // 直接调用回调函数
-                            onCloseCallback.accept(reason, statusCode, url);
-                        } catch (Exception e) {
-                            MkJSForge.LOGGER.error("执行onClose回调失败: " + e.getMessage(), e);
-                        }
-                    }
-                    return CompletableFuture.completedFuture(null);
-                }
-
-                @Override
-                public void onError(WebSocket webSocket, Throwable error) {
-                    MkJSForge.LOGGER.error("WebSocket错误: " + error.getMessage(), error);
-                    if (onErrorCallback != null) {
-                        try {
-                            // 直接调用回调函数
-                            onErrorCallback.accept(error.getMessage(), url);
-                        } catch (Exception e) {
-                            MkJSForge.LOGGER.error("执行onError回调失败: " + e.getMessage(), e);
-                        }
-                    }
-                }
-
-                @Override
-                public CompletionStage<?> onBinary(WebSocket webSocket, ByteBuffer data, boolean last) {
-                    // 请求接收更多消息
-                    webSocket.request(1);
-                    return CompletableFuture.completedFuture(null);
-                }
-
-                @Override
-                public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
-                    // 请求接收更多消息
-                    webSocket.request(1);
-                    return CompletableFuture.completedFuture(null);
-                }
-
-                @Override
-                public CompletionStage<?> onPong(WebSocket webSocket, ByteBuffer message) {
-                    // 请求接收更多消息
-                    webSocket.request(1);
-                    return CompletableFuture.completedFuture(null);
-                }
-            };
-
             try {
-                futureWebSocket = httpClient.newWebSocketBuilder()
-                        .buildAsync(URI.create(url), listener);
+                WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 
-                // 获取WebSocket对象
-                webSocket = futureWebSocket.join();
-            } catch (Exception e) {
+                // 创建WebSocket端点并连接
+                session = container.connectToServer(new WebSocketEndpoint(), URI.create(url));
+            } catch (DeploymentException | IOException e) {
                 connected = false;
                 if (onErrorCallback != null) {
                     onErrorCallback.accept("连接失败: " + e.getMessage(), url);
@@ -238,9 +150,8 @@ public class MkWebSocket {
 
         public boolean disconnect() {
             try {
-                if (webSocket != null) {
-                    // 关闭WebSocket连接（正常关闭）
-                    webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "客户端主动关闭").join();
+                if (session != null && session.isOpen()) {
+                    session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "客户端主动关闭"));
                     connected = false;
                     return true;
                 }
@@ -252,20 +163,82 @@ public class MkWebSocket {
         }
 
         public boolean isConnected() {
-            return connected;
+            return connected && session != null && session.isOpen();
         }
 
         public boolean sendMessage(String message) {
             try {
                 if (isConnected()) {
-                    // 异步发送消息
-                    webSocket.sendText(message, true).join();
+                    session.getBasicRemote().sendText(message);
                     return true;
                 }
                 return false;
             } catch (Exception e) {
                 MkJSForge.LOGGER.error("发送WebSocket消息失败: " + e.getMessage(), e);
                 return false;
+            }
+        }
+
+        @ClientEndpoint
+        public class WebSocketEndpoint {
+
+            @OnOpen
+            public void onOpen(Session session) {
+                connected = true;
+                MkJSForge.LOGGER.info("WebSocket连接已建立: " + url);
+                if (onOpenCallback != null) {
+                    try {
+                        onOpenCallback.accept(url);
+                    } catch (Exception e) {
+                        MkJSForge.LOGGER.error("执行onOpen回调失败: " + e.getMessage(), e);
+                    }
+                }
+            }
+
+            @OnMessage
+            public void onMessage(String message) {
+                if (onMessageCallback != null) {
+                    try {
+                        onMessageCallback.accept(message, url);
+                    } catch (Exception e) {
+                        MkJSForge.LOGGER.error("执行onMessage回调失败: " + e.getMessage(), e);
+                    }
+                }
+            }
+
+            @OnMessage
+            public void onBinary(ByteBuffer data) {
+                // 二进制消息处理，如有需要可以实现
+            }
+
+            @OnClose
+            public void onClose(Session session, CloseReason closeReason) {
+                connected = false;
+                MkJSForge.LOGGER.info("WebSocket连接已关闭: " + url +
+                        ", 状态码: " + closeReason.getCloseCode().getCode() +
+                        ", 原因: " + closeReason.getReasonPhrase());
+                if (onCloseCallback != null) {
+                    try {
+                        onCloseCallback.accept(
+                                closeReason.getReasonPhrase(),
+                                closeReason.getCloseCode().getCode(),
+                                url);
+                    } catch (Exception e) {
+                        MkJSForge.LOGGER.error("执行onClose回调失败: " + e.getMessage(), e);
+                    }
+                }
+            }
+
+            @OnError
+            public void onError(Session session, Throwable error) {
+                MkJSForge.LOGGER.error("WebSocket错误: " + error.getMessage(), error);
+                if (onErrorCallback != null) {
+                    try {
+                        onErrorCallback.accept(error.getMessage(), url);
+                    } catch (Exception e) {
+                        MkJSForge.LOGGER.error("执行onError回调失败: " + e.getMessage(), e);
+                    }
+                }
             }
         }
     }
