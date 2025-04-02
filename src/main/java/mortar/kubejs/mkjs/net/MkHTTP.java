@@ -8,8 +8,14 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MkHTTP {
+    // 线程池用于执行异步请求
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
     /**
      * 执行GET请求
      * 
@@ -63,7 +69,59 @@ public class MkHTTP {
     }
 
     /**
-     * 发送HTTP请求
+     * 异步执行GET请求
+     * 
+     * @param urlString 请求URL
+     * @return 包含响应内容的CompletableFuture
+     */
+    public CompletableFuture<String> getAsync(String urlString) {
+        return sendRequestAsync(urlString, "GET", null, null);
+    }
+
+    /**
+     * 异步执行带有headers的GET请求
+     * 
+     * @param urlString 请求URL
+     * @param headers   请求头
+     * @return 包含响应内容的CompletableFuture
+     */
+    public CompletableFuture<String> getAsync(String urlString, Map<String, String> headers) {
+        return sendRequestAsync(urlString, "GET", headers, null);
+    }
+
+    /**
+     * 异步执行POST请求
+     * 
+     * @param urlString 请求URL
+     * @param jsonData  JSON格式数据
+     * @return 包含响应内容的CompletableFuture
+     */
+    public CompletableFuture<String> postAsync(String urlString, String jsonData) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        return sendRequestAsync(urlString, "POST", headers, jsonData);
+    }
+
+    /**
+     * 异步执行带有headers的POST请求
+     * 
+     * @param urlString 请求URL
+     * @param headers   请求头
+     * @param jsonData  JSON格式数据
+     * @return 包含响应内容的CompletableFuture
+     */
+    public CompletableFuture<String> postAsync(String urlString, Map<String, String> headers, String jsonData) {
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
+        if (!headers.containsKey("Content-Type")) {
+            headers.put("Content-Type", "application/json");
+        }
+        return sendRequestAsync(urlString, "POST", headers, jsonData);
+    }
+
+    /**
+     * 发送HTTP请求（同步）
      */
     private String sendRequest(String urlString, String method, Map<String, String> headers, String data)
             throws Exception {
@@ -100,5 +158,33 @@ public class MkHTTP {
         }
         connection.disconnect();
         return response.toString();
+    }
+
+    /**
+     * 发送HTTP请求（异步）
+     * 
+     * @param urlString 请求URL
+     * @param method    HTTP方法 (GET, POST等)
+     * @param headers   请求头
+     * @param data      请求数据
+     * @return 包含响应内容的CompletableFuture
+     */
+    private CompletableFuture<String> sendRequestAsync(String urlString, String method,
+            Map<String, String> headers, String data) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return sendRequest(urlString, method, headers, data);
+            } catch (Exception e) {
+                throw new RuntimeException("异步HTTP请求失败", e);
+            }
+        }, executor);
+    }
+
+    /**
+     * 关闭HTTP客户端及其线程池
+     * 应在应用程序关闭时调用此方法以释放资源
+     */
+    public void shutdown() {
+        executor.shutdown();
     }
 }
