@@ -175,16 +175,16 @@ dependencies {
 
     // Jakarta EE WebSocket API
     implementation 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    implementation 'org.glassfish.tyrus:tyrus-server:2.1.0'
-    implementation 'org.glassfish.tyrus:tyrus-client:2.1.0'
+    implementation 'org.glassfish.tyrus:tyrus-server:2.2.0'
+    implementation 'org.glassfish.tyrus:tyrus-client:2.2.0'
 
-    compileOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    compileOnly 'org.glassfish.tyrus:tyrus-server:2.1.0'
-    compileOnly 'org.glassfish.tyrus:tyrus-client:2.1.0'
+    // compileOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
+    // compileOnly 'org.glassfish.tyrus:tyrus-server:2.2.0'
+    // compileOnly 'org.glassfish.tyrus:tyrus-client:2.2.0'
     
-    runtimeOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    runtimeOnly 'org.glassfish.tyrus:tyrus-server:2.1.0'
-    runtimeOnly 'org.glassfish.tyrus:tyrus-client:2.1.0'
+    // runtimeOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
+    // runtimeOnly 'org.glassfish.tyrus:tyrus-server:2.2.0'
+    // runtimeOnly 'org.glassfish.tyrus:tyrus-client:2.2.0'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
