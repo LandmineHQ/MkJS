@@ -174,17 +174,11 @@ dependencies {
     implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
     // Jakarta EE WebSocket API
-    implementation 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    implementation 'org.glassfish.tyrus:tyrus-server:2.2.0'
-    implementation 'org.glassfish.tyrus:tyrus-client:2.2.0'
-
-    // compileOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    // compileOnly 'org.glassfish.tyrus:tyrus-server:2.2.0'
-    // compileOnly 'org.glassfish.tyrus:tyrus-client:2.2.0'
-    
-    // runtimeOnly 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    // runtimeOnly 'org.glassfish.tyrus:tyrus-server:2.2.0'
-    // runtimeOnly 'org.glassfish.tyrus:tyrus-client:2.2.0'
+    minecraftLibrary  'jakarta.websocket:jakarta.websocket-api:2.2.0'
+    minecraftLibrary  'org.glassfish.tyrus:tyrus-client:2.2.0'
+    // minecraftLibrary to jarJar
+    jarJar(group: 'jakarta.websocket', name: 'jakarta.websocket-api', version: '[2.2.0]')
+    jarJar(group: 'org.glassfish.tyrus', name: 'tyrus-client', version: '[2.2.0]')
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
