@@ -16,10 +16,6 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-
-// 启用Jar-in-Jar系统
-jarJar.enable()
-
 minecraft {
     // The mappings can be changed at any time and must be in the following format.
     // Channel:   Version:
@@ -178,33 +174,10 @@ dependencies {
     implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
     // Jakarta WebSocket相关依赖
-    minecraftLibrary 'jakarta.websocket:jakarta.websocket-api:[2.0.0,2.2.0]'
-    minecraftLibrary 'jakarta.websocket:jakarta.websocket-client-api:[2.0.0,2.2.0]'
-    minecraftLibrary 'org.glassfish.tyrus:tyrus-client:[2.0.0,2.2.0]'
-    minecraftLibrary 'org.glassfish.tyrus:tyrus-container-grizzly-client:[2.0.0,2.2.0]'
-    
-    // 使用jarJar配置添加依赖
-    jarJar(group: 'jakarta.websocket', name: 'jakarta.websocket-api', version: '[2.0.0,2.2.0]')
-    jarJar(group: 'jakarta.websocket', name: 'jakarta.websocket-client-api', version: '[2.0.0,2.2.0]')
-    jarJar(group: 'org.glassfish.tyrus', name: 'tyrus-client', version: '[2.0.0,2.2.0]')
-    jarJar(group: 'org.glassfish.tyrus', name: 'tyrus-container-grizzly-client', version: '[2.0.0,2.2.0]')
-}
-
-// 从运行时配置中添加依赖，并设置过滤器，只包含指定的依赖
-jarJar.fromRuntimeConfiguration()
-jarJar {
-    dependencies {
-        // 只包含Jakarta和Tyrus相关的依赖 - 修复通配符格式
-        include(dependency('jakarta.websocket:jakarta.websocket-api'))
-        include(dependency('jakarta.websocket:jakarta.websocket-client-api'))
-        include(dependency('org.glassfish.tyrus:tyrus-client'))
-        include(dependency('org.glassfish.tyrus:tyrus-container-grizzly-client'))
-    }
-}
-
-// 配置jarJar任务
-tasks.named('jarJar') {
-    // 可以在这里添加更多配置
+    minecraftLibrary 'jakarta.websocket:jakarta.websocket-api:2.2.0'
+    minecraftLibrary 'jakarta.websocket:jakarta.websocket-client-api:2.2.0'
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-client:2.2.0'
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-container-grizzly-client:2.2.0'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -254,8 +227,6 @@ publishing {
     publications {
         register('mavenJava', MavenPublication) {
             artifact jar
-            // 添加Jar-in-Jar组件到发布
-            jarJar.component(it)
         }
     }
     repositories {
