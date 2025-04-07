@@ -173,24 +173,59 @@ dependencies {
     implementation fg.deobf("dev.latvian.mods:rhino-forge:${rhino_version}")
     implementation fg.deobf("dev.architectury:architectury-forge:${architectury_version}")
 
-    // Jakarta WebSocket
-    minecraftLibrary 'jakarta.websocket:jakarta.websocket-api:2.2.0'
-    minecraftLibrary 'jakarta.websocket:jakarta.websocket-client-api:2.2.0'
-    minecraftLibrary 'org.glassfish.tyrus:tyrus-client:2.2.0'
-    minecraftLibrary 'org.glassfish.tyrus:tyrus-container-grizzly-client:2.2.0'
-    
+    // Jakarta WebSocket API
     jarJar('jakarta.websocket:jakarta.websocket-api:2.2.0') {
-        jarJar.ranged(it, "[2.0.0,3.0)")
+        jarJar.ranged(it, "[2.2.0,3.0)")
     }
+    minecraftLibrary 'jakarta.websocket:jakarta.websocket-api:2.2.0'
+
+    // Jakarta WebSocket Client API
     jarJar('jakarta.websocket:jakarta.websocket-client-api:2.2.0') {
-        jarJar.ranged(it, "[2.0.0,3.0)")
+        jarJar.ranged(it, "[2.2.0,3.0)")
     }
+    minecraftLibrary 'jakarta.websocket:jakarta.websocket-client-api:2.2.0'
+
+    // Tyrus Client
     jarJar('org.glassfish.tyrus:tyrus-client:2.2.0') {
-        jarJar.ranged(it, "[2.0.0,3.0)")
+        jarJar.ranged(it, "[2.2.0,3.0)")
     }
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-client:2.2.0'
+
+    // Tyrus Core
+    jarJar('org.glassfish.tyrus:tyrus-core:2.2.0') {
+        jarJar.ranged(it, "[2.2.0,3.0)")
+    }
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-core:2.2.0'
+
+    // Tyrus SPI
+    jarJar('org.glassfish.tyrus:tyrus-spi:2.2.0') {
+        jarJar.ranged(it, "[2.2.0,3.0)")
+    }
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-spi:2.2.0'
+
+    // Tyrus Grizzly Container Client
     jarJar('org.glassfish.tyrus:tyrus-container-grizzly-client:2.2.0') {
-        jarJar.ranged(it, "[2.0.0,3.0)")
+        jarJar.ranged(it, "[2.2.0,3.0)")
     }
+    minecraftLibrary 'org.glassfish.tyrus:tyrus-container-grizzly-client:2.2.0'
+
+    // Grizzly Framework
+    jarJar('org.glassfish.grizzly:grizzly-framework:4.0.2') {
+        jarJar.ranged(it, "[4.0.2,5.0)")
+    }
+    minecraftLibrary 'org.glassfish.grizzly:grizzly-framework:4.0.2'
+
+    // Grizzly HTTP
+    jarJar('org.glassfish.grizzly:grizzly-http:4.0.2') {
+        jarJar.ranged(it, "[4.0.2,5.0)")
+    }
+    minecraftLibrary 'org.glassfish.grizzly:grizzly-http:4.0.2'
+
+    // Grizzly HTTP Server
+    jarJar('org.glassfish.grizzly:grizzly-http-server:4.0.2') {
+        jarJar.ranged(it, "[4.0.2,5.0)")
+    }
+    minecraftLibrary 'org.glassfish.grizzly:grizzly-http-server:4.0.2'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
